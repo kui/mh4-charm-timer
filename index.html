@@ -1,0 +1,45 @@
+<meta charset="UTF-8">
+<!-- TODO favicon -->
+<title>MH4おまもりタイマー</title>
+<h1>MH4おまもりタイマー</h1>
+
+<form id="ct-input">
+  <table>
+    <tr>
+      <th><label for="ct-machine-datetime">本体設定時刻</label></th>
+      <td>
+        <input required type="datetime-local" name="ct-machine-datetime">
+      </td>
+    </tr>
+    <tr>
+      <th><label for="ct-charactor-selection-time">キャラ選択</label></th>
+      <td><fieldset name="ct-charactor-selection-time">
+          <input required type="number" min="0" max="999" title="分(0-999)"> :
+          <input required type="number" min="0" max="59"  title="秒(0-59)"> .
+          <input required type="number" min="0" max="99"  title="コンマ秒(0-99)">
+      </fieldset></td>
+    </tr>
+    <tr>
+      <th><label for="ct-alchemic-request-time">錬金依頼</label></th>
+      <td><fieldset name="ct-alchemic-request-time" title="分:秒.コンマ秒">
+          <input required type="number" min="0" max="999" title="分(0-999)"> :
+          <input required type="number" min="0" max="59"  title="秒(0-59)"> .
+          <input required type="number" min="0" max="99"  title="コンマ秒(0-99)">
+      </td></fieldset>
+    </tr>
+    <tr><td><button name="ct-start">スタート</button></td></tr>
+  </table>
+</form>
+
+<div id="ct-display"></div>
+<div id="ct-log"></div>
+
+<script src="timer.js"></script>
+<script>
+  var ct = new CharmTimer(
+    document.getElementById('ct-input'),
+    document.getElementById('ct-display'),
+    document.getElementById('ct-log')
+  );
+  ct.init();
+</script>
