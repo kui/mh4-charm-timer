@@ -14,32 +14,44 @@
     <tr>
       <th><label for="ct-charactor-selection-time">キャラ選択</label></th>
       <td><fieldset name="ct-charactor-selection-time">
-          <input required type="number" min="0" max="999" title="分(0-999)" value=1> :
-          <input required type="number" min="0" max="59"  title="秒(0-59)" value=0> .
-          <input required type="number" min="0" max="99"  title="コンマ秒(0-99)" value=3>
+          <input required type="number" min="0" max="999" title="分(0-999)" value=0> :
+          <input required type="number" min="0" max="59"  title="秒(0-59)" value=10> .
+          <input required type="number" min="0" max="99"  title="コンマ秒(0-99)" value=50>
       </fieldset></td>
     </tr>
     <tr>
-      <th><label for="ct-alchemic-request-time">錬金依頼</label></th>
-      <td><fieldset name="ct-alchemic-request-time" title="分:秒.コンマ秒">
+      <th><label for="ct-alchemy-request-time">錬金依頼</label></th>
+      <td><fieldset name="ct-alchemy-request-time" title="分:秒.コンマ秒">
           <input required type="number" min="0" max="999" title="分(0-999)" value=1> :
-          <input required type="number" min="0" max="59"  title="秒(0-59)" value=0> .
-          <input required type="number" min="0" max="99"  title="コンマ秒(0-99)" value=4>
+          <input required type="number" min="0" max="59"  title="秒(0-59)" value=1> .
+          <input required type="number" min="0" max="99"  title="コンマ秒(0-99)" value=22>
       </td></fieldset>
     </tr>
-    <tr><td><button name="ct-start">スタート</button></td></tr>
+    <tr><td colspan="2"><button name="ct-start">スタート</button></td></tr>
+    <tr><td colspan="2" id="ct-error-message"></td></tr>
   </table>
 </form>
 
-<div id="ct-display"></div>
-<div id="ct-log"></div>
+<div id="ct-display">
+  <table>
+    <tr>
+      <th>キャラ選択まで</th>
+      <td id="ct-charactor-selection-remaining"></td>
+    </tr>
+    <tr>
+      <th>錬金依頼まで</th>
+      <td id="ct-alchemy-request-remaining"></td>
+    </tr>
+  </table>
+  <p><small>経過時間: <span id="ct-elapsed-time"></span></small>
+</div>
 
-<script src="timer.js"></script>
+<h3>履歴</h3>
+<div id="ct-log">
+</div>
+
+<script src="ctimer.js"></script>
 <script>
-  var ct = new CharmTimer(
-    document.getElementById('ct-input'),
-    document.getElementById('ct-display'),
-    document.getElementById('ct-log')
-  );
+  var ct = new CharmTimer('ct-input', 'ct-display', 'ct-log');
   ct.init();
 </script>
