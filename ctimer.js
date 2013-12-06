@@ -178,6 +178,8 @@ var CharmTimer;
     },
     onChange: function(cb) {
       this._fieldset.addEventListener('change', cb);
+      this._fieldset.addEventListener('keypress', cb);
+      this._fieldset.addEventListener('click', cb);
     }
   };
 
@@ -247,15 +249,19 @@ var CharmTimer;
     this._element = element;
     this._log = [];
     this._storage = new Storage('ct-log');
+    this._logsElement = null;
   };
   CharmTimer.LogDisplay.prototype = {
     load: function() {
       var log = this._storage.get('_');
       if(!log) return;
 
-      this._log = log;
+      this._log = [];
+      log.forEach((function(l){
+        this._log.push(this._buildLog(l));
+      }).bind(this));
       this._render();
-      d('loadLog: %o', log)
+      d('loadLog: %o', log);
     },
     save: function() {
       this._storage.delaySet('_', this._log);
@@ -266,7 +272,7 @@ var CharmTimer;
       this._render();
     },
     log: function(inputForm) {
-      var l = this._buildLog(inputForm);
+      var l = this._buildLogWithInputForm(inputForm);
 
       this._log.unshift(l);
       while(this._log.length > LOG_LIMIT)
@@ -275,17 +281,31 @@ var CharmTimer;
       this.save();
       this._render();
     },
-    _buildLog: function(inputForm) {
-      return {
+    _buildLogWithInputForm: function(inputForm){
+      return this._buildLog({
         machineDatetime: inputForm.getMachineDatetime().getTime(),
         charactorSelectionTime: inputForm.getCharactorSelectionCTime().toMilliseconds(),
         alchemyRequestTime: inputForm.getAlchemyRequestCTime().toMilliseconds(),
         memo: '',
-      };
+      });
+    },
+    _buildLog: function(o) {
+      var l = new CharmTimer.Log(o);
+      l.onChange((function(){
+        this.save();
+      }).bind(this));
+      l.onDelete((function(){
+        this._log = this._log.filter(function(e){
+          return l !== e;
+        });
+        this._render();
+        this.save();
+      }).bind(this));
+      return l;
     },
     _render: function() {
-      var html = '<table>';
-      html += '<tr>' +
+      var table = document.createElement('table');
+      table.innerHTML = '<tr>' +
         '<th>本体設定時刻</th>' +
         '<th>キャラ選択</th>' +
         '<th>錬金依頼</th>' +
@@ -293,16 +313,80 @@ var CharmTimer;
         '</tr>';
       for(var i = 0, len = this._log.length; i < len; i++) {
         var l = this._log[i];
-        html += '<tr>' +
-          '<td>' + new Date(l.machineDatetime).toLocaleString() + '</td>' +
-          '<td>' + CTime.fromMilliseconds(l.charactorSelectionTime).toString() + '</td>' +
-          '<td>' + CTime.fromMilliseconds(l.alchemyRequestTime).toString() + '</td>' +
-          '<td class="ct-memo"><button>✎</button><span>' + l.memo + '</span></td>' +
-          '</tr>';
+        table.appendChild(l.toTd());
       }
-      html += '</table>';
-      this._element.innerHTML = html;
+
+      if (this._logsElement) {
+        this._element.replaceChild(table, this._logsElement);
+      } else {
+        this._element.appendChild(table);
+      }
+      this._logsElement = table;
     },
+  };
+
+  CharmTimer.Log = function(o) {
+    this.machineDatetime = o.machineDatetime;
+    this.charactorSelectionTime = o.charactorSelectionTime;
+    this.alchemyRequestTime = o.alchemyRequestTime;
+    this.memo = o.memo;
+    this._changeCallback = null;
+  };
+  CharmTimer.Log.prototype = {
+    toTd: function() {
+      var tr = document.createElement('tr');
+      CharmTimer.Log._appendTd(tr, new Date(this.machineDatetime).toLocaleString());
+      CharmTimer.Log._appendTd(tr, CTime.fromMilliseconds(this.charactorSelectionTime).toString());
+      CharmTimer.Log._appendTd(tr, CTime.fromMilliseconds(this.alchemyRequestTime).toString());
+      tr.appendChild(this._buildMemoTd());
+      tr.appendChild(this._buildDeleteButtonTd());
+      return tr;
+    },
+    _buildMemoTd: function() {
+      var td = document.createElement('td');
+      td.appendChild(this._buildMemoEditor());
+      return td;
+    },
+    _buildMemoEditor: function() {
+      var span = document.createElement('input');
+      span.type = 'text';
+      span.value = this.memo;
+
+      var that = this;
+      var cb = function(event){
+        d(this, event);
+        if (that.memo === this.value)
+          return;
+        that.memo = this.value;
+        that._changeCallback();
+      };
+      span.addEventListener('change', cb);
+      span.addEventListener('keyup', cb);
+      span.addEventListener('click', cb);
+      return span;
+    },
+    _buildDeleteButtonTd: function() {
+      var td = document.createElement('td');
+      td.appendChild(this._buildDeleteButton());
+      return td;
+    },
+    _buildDeleteButton: function() {
+      var b = document.createElement('button');
+      b.textContent = '✕';
+      b.addEventListener('click', this._deleteCallback);
+      return b;
+    },
+    onChange: function(cb) {
+      this._changeCallback = cb;
+    },
+    onDelete: function(cb) {
+      this._deleteCallback = cb;
+    }
+  };
+  CharmTimer.Log._appendTd = function(tr, tdTextContent){
+    var td = document.createElement('td');
+    td.textContent = tdTextContent;
+    tr.appendChild(td);
   };
 
   /******************************************
