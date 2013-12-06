@@ -1,5 +1,5 @@
 var CharmTimer;
-!function(window){
+(function(window){
   'use strict';
 
   /* デバグフラグ */
@@ -9,7 +9,7 @@ var CharmTimer;
   var TIMER_INTERVAL = 10;
 
   /* タイムゾーンのオフセット [msec] */
-  var TIMEZONE_OFFSET = (new Date).getTimezoneOffset() * 60 * 1000;
+  var TIMEZONE_OFFSET = (new Date()).getTimezoneOffset() * 60 * 1000;
 
   /* ログの上限 */
   var LOG_LIMIT = 50;
@@ -95,11 +95,11 @@ var CharmTimer;
       d('load inputForm: %o', o);
 
       var date = new Date(o.machineDatetime);
-      var dateString = padLeft(date.getFullYear(), '0', 4) + '-'
-        + padLeft(date.getMonth() + 1, '0', 2) + '-'
-        + padLeft(date.getDay() + 1, '0', 2) + 'T'
-        + padLeft(date.getHours(), '0', 2) + ':'
-        + padLeft(date.getMinutes(), '0', 2);
+      var dateString = padLeft(date.getFullYear(), '0', 4) + '-' +
+        padLeft(date.getMonth() + 1, '0', 2) + '-' +
+        padLeft(date.getDay() + 1, '0', 2) + 'T' +
+        padLeft(date.getHours(), '0', 2) + ':' +
+        padLeft(date.getMinutes(), '0', 2);
       this._machineDatetime.value = dateString;
 
       this._charSelTimeForm.setCTime(CTime.fromMilliseconds(o.charactorSelectionTime));
@@ -165,9 +165,9 @@ var CharmTimer;
   CharmTimer.CTimeForm.prototype = {
     getCTime: function(){
       var inputs = $$(this._fieldset, 'input');
-      var min = parseInt(inputs[0].value);
-      var sec = parseInt(inputs[1].value);
-      var msec = parseInt(inputs[2].value) * 10;
+      var min = parseInt(inputs[0].value, 10);
+      var sec = parseInt(inputs[1].value, 10);
+      var msec = parseInt(inputs[2].value, 10) * 10;
       return new CTime(min, sec, msec);
     },
     setCTime: function(ctime) {
@@ -289,15 +289,15 @@ var CharmTimer;
         '<th>本体設定時刻</th>' +
         '<th>キャラ選択</th>' +
         '<th>錬金依頼</th>' +
-        '<th>メモ</th>'
+        '<th>メモ</th>' +
         '</tr>';
       for(var i = 0, len = this._log.length; i < len; i++) {
         var l = this._log[i];
         html += '<tr>' +
-          '<td>' + new Date(l['machineDatetime']).toLocaleString() + '</td>' +
-          '<td>' + CTime.fromMilliseconds(l['charactorSelectionTime']).toString() + '</td>' +
-          '<td>' + CTime.fromMilliseconds(l['alchemyRequestTime']).toString() + '</td>' +
-          '<td class="ct-memo"><button>✎</button><span>' + l['memo'] + '</span></td>' +
+          '<td>' + new Date(l.machineDatetime).toLocaleString() + '</td>' +
+          '<td>' + CTime.fromMilliseconds(l.charactorSelectionTime).toString() + '</td>' +
+          '<td>' + CTime.fromMilliseconds(l.alchemyRequestTime).toString() + '</td>' +
+          '<td class="ct-memo"><button>✎</button><span>' + l.memo + '</span></td>' +
           '</tr>';
       }
       html += '</table>';
@@ -422,7 +422,7 @@ var CharmTimer;
     toString: function() {
       return this._minutes + ':' + this._seconds + '.' + (this._milliseconds / 10);
     },
-  }
+  };
 
   /* 便利関数 */
   var $ = function(query) {
@@ -442,4 +442,4 @@ var CharmTimer;
       numString = ch + numString;
     return numString;
   };
-}(window);
+})(window);
