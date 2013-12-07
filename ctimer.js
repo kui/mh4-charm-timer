@@ -12,7 +12,7 @@ var CharmTimer;
   var TIMEZONE_OFFSET = (new Date()).getTimezoneOffset() * 60 * 1000;
 
   /* ログの上限 */
-  var LOG_LIMIT = 50;
+  var LOG_LIMIT = 1000;
 
   /******************************************
    * ViewModel の親玉
@@ -81,6 +81,8 @@ var CharmTimer;
     this._errMsgElement = $$(this._form, '#ct-error-message')[0];
     this._storage = new Storage('ct-input-form');
 
+    this._machineDatetime.value = this._buildDatetimeLocalString(new Date());
+
     var cb = (function(event) {
       this.save();
     }).bind(this);
@@ -95,15 +97,18 @@ var CharmTimer;
       d('load inputForm: %o', o);
 
       var date = new Date(o.machineDatetime);
-      var dateString = padLeft(date.getFullYear(), '0', 4) + '-' +
-        padLeft(date.getMonth() + 1, '0', 2) + '-' +
-        padLeft(date.getDay() + 1, '0', 2) + 'T' +
-        padLeft(date.getHours(), '0', 2) + ':' +
-        padLeft(date.getMinutes(), '0', 2);
+      var dateString = this._buildDatetimeLocalString(date);
       this._machineDatetime.value = dateString;
 
       this._charSelTimeForm.setCTime(CTime.fromMilliseconds(o.charactorSelectionTime));
       this._alchReqTimeForm.setCTime(CTime.fromMilliseconds(o.alchemyRequestTime));
+    },
+    _buildDatetimeLocalString: function(date) {
+      return padLeft(date.getFullYear(), '0', 4) + '-' +
+        padLeft(date.getMonth() + 1, '0', 2) + '-' +
+        padLeft(date.getDay() + 1, '0', 2) + 'T' +
+        padLeft(date.getHours(), '0', 2) + ':' +
+        padLeft(date.getMinutes(), '0', 2);
     },
     save: function() {
       this._storage.delaySet('_', {
@@ -191,7 +196,7 @@ var CharmTimer;
     this._alchReqRemainingElement = $$(element, '#ct-alchemy-request-remaining')[0];
   };
   CharmTimer.TimeDisplay.prototype = {
-    /* _render* は呼ばれる頻度高いので、最低限のリファクタリングに留めている*/
+    /* 呼ばれる頻度高いので、最低限のリファクタリングに留めている*/
     render: function(timerStatus) {
       this._renderElapsedTime(timerStatus);
       this._renderCharactorSelectionRemaining(timerStatus);
@@ -215,9 +220,10 @@ var CharmTimer;
       element.textContent = formatForMillisec(remaining);
     },
   };
+  /* 呼ばれる頻度高いので、最低限のリファクタリングに留めている */
   var formatForMillisec = function(msec){
     if (msec < 0)
-      return '--:--.--';
+      return '000:00.00';
 
     var c = Math.floor(msec / 10);
     var s = Math.floor(c / 100);
@@ -310,6 +316,7 @@ var CharmTimer;
         '<th>キャラ選択</th>' +
         '<th>錬金依頼</th>' +
         '<th>メモ</th>' +
+        '<th>削除</th>' +
         '</tr>';
       for(var i = 0, len = this._log.length; i < len; i++) {
         var l = this._log[i];
@@ -335,12 +342,20 @@ var CharmTimer;
   CharmTimer.Log.prototype = {
     toTd: function() {
       var tr = document.createElement('tr');
-      CharmTimer.Log._appendTd(tr, new Date(this.machineDatetime).toLocaleString());
+      CharmTimer.Log._appendTd(tr, this._buildMachineDatetimeString(this.machineDatetime));
       CharmTimer.Log._appendTd(tr, CTime.fromMilliseconds(this.charactorSelectionTime).toString());
       CharmTimer.Log._appendTd(tr, CTime.fromMilliseconds(this.alchemyRequestTime).toString());
       tr.appendChild(this._buildMemoTd());
       tr.appendChild(this._buildDeleteButtonTd());
       return tr;
+    },
+    _buildMachineDatetimeString: function(msec) {
+      var date = new Date(this.machineDatetime);
+      return padLeft(date.getFullYear(), '0', 4) + '/' +
+        padLeft(date.getMonth() + 1, '0', 2) + '/' +
+        padLeft(date.getDay() + 1, '0', 2) + ' ' +
+        padLeft(date.getHours(), '0', 2) + ':' +
+        padLeft(date.getMinutes(), '0', 2);
     },
     _buildMemoTd: function() {
       var td = document.createElement('td');
@@ -354,7 +369,6 @@ var CharmTimer;
 
       var that = this;
       var cb = function(event){
-        d(this, event);
         if (that.memo === this.value)
           return;
         that.memo = this.value;
@@ -504,7 +518,9 @@ var CharmTimer;
       return ((((this._minutes) * 60) + this._seconds) * 1000) + this._milliseconds;
     },
     toString: function() {
-      return this._minutes + ':' + this._seconds + '.' + (this._milliseconds / 10);
+      return padLeft(this._minutes, '0', 3) + ':' +
+        padLeft(this._seconds, '0', 2) + '.' +
+        padLeft(this._milliseconds / 10, '0', 2);
     },
   };
 

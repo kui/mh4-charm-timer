@@ -1,0 +1,35 @@
+
+/* *******************************
+   #ct-input
+   ******************************* */
+#ct-input fieldset {
+  border-width: 0px;
+  padding: 0px;
+}
+#ct-input button {
+  width: 100%;
+  height: 50px;
+  font-size: 180%;
+}
+
+/* *******************************
+   #ct-display
+   ******************************* */
+#ct-display table {
+  font-size: 180%;
+}
+#ct-display small {
+  font-size: smaller;
+  color: gray;
+}
+
+/* *******************************
+   #ct-log
+   ******************************* */
+#ct-log td:nth-child(even), #ct-log th:nth-child(even) {
+  background: #ddd;
+}
+#ct-log td, #ct-log th {
+  border-bottom: 1px gray solid;
+  text-align: center;
+}
