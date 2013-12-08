@@ -106,7 +106,7 @@ var CharmTimer;
     _buildDatetimeLocalString: function(date) {
       return padLeft(date.getFullYear(), '0', 4) + '-' +
         padLeft(date.getMonth() + 1, '0', 2) + '-' +
-        padLeft(date.getDay() + 1, '0', 2) + 'T' +
+        padLeft(date.getDate(), '0', 2) + 'T' +
         padLeft(date.getHours(), '0', 2) + ':' +
         padLeft(date.getMinutes(), '0', 2);
     },
@@ -353,7 +353,7 @@ var CharmTimer;
       var date = new Date(this.machineDatetime);
       return padLeft(date.getFullYear(), '0', 4) + '/' +
         padLeft(date.getMonth() + 1, '0', 2) + '/' +
-        padLeft(date.getDay() + 1, '0', 2) + ' ' +
+        padLeft(date.getDate(), '0', 2) + ' ' +
         padLeft(date.getHours(), '0', 2) + ':' +
         padLeft(date.getMinutes(), '0', 2);
     },
