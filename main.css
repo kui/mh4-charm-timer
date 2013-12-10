@@ -6,6 +6,16 @@
   border-width: 0px;
   padding: 0px;
 }
+#ct-input table {
+  border-spacing: 0px;
+}
+#ct-input th, #ct-input td {
+  border-top: 1px #ddd solid;
+  padding: 4px;
+}
+#ct-input input[type="number"] {
+  width: 3em;
+}
 #ct-input button {
   width: 100%;
   height: 50px;
