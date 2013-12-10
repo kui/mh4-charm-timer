@@ -12,30 +12,39 @@
     <tr>
       <th><label for="ct-machine-datetime">計測開始本体時刻</label></th>
       <td>
-        <input required type="datetime-local" name="ct-machine-datetime" value="2013-12-12T12:34:40">
+        <input required type="datetime-local" name="ct-machine-datetime"
+           step="1" class="numbers" value="2013-12-12T12:34:40">
       </td>
     </tr>
     <tr>
       <th><label for="ct-charactor-selection-time">キャラ選択</label></th>
       <td><fieldset name="ct-charactor-selection-time">
-          <input required type="number" min="0" max="99" title="分(0-99)" value=1> :
-          <input required type="number" min="0" max="59"  title="秒(0-59)" value=0> .
-          <input required type="number" min="0" max="99"  title="コンマ秒(0-99)" value=00>
+          <input required type="number" min="0" max="99" title="分(0-99)"
+                 class="numbers" value=1> :
+          <input required type="number" min="0" max="59"  title="秒(0-59)"
+                 class="numbers" value=0> .
+          <input required type="number" min="0" max="99"  title="コンマ秒(0-99)"
+                 class="numbers" value=00>
       </fieldset></td>
     </tr>
     <tr>
       <th><label for="ct-alchemy-request-time">錬金依頼</label></th>
       <td><fieldset name="ct-alchemy-request-time" title="分:秒.コンマ秒">
-          <input required type="number" min="0" max="99" title="分(0-99)" value=1> :
-          <input required type="number" min="0" max="59"  title="秒(0-59)" value=40> .
-          <input required type="number" min="0" max="99"  title="コンマ秒(0-99)" value=00>
+          <input required type="number" min="0" max="99" title="分(0-99)"
+                 class="numbers" value=1> :
+          <input required type="number" min="0" max="59"  title="秒(0-59)"
+                 class="numbers" value=40> .
+          <input required type="number" min="0" max="99"  title="コンマ秒(0-99)"
+                 class="numbers"  value=00>
       </td></fieldset>
     </tr>
     <tr>
       <th>アラート音</th>
-      <td>
-          <input required type="number" min="0" max="30" title="秒(0-30)" value=8> 秒前から鳴る<br>
-          音量: <input required type="range" min="0" max="1" step="0.01" value=1>
+      <td id="ct-alert-settings">
+          <input required type="number" min="0" max="30" title="秒(0-30)"
+                 class="numbers" value=8> 秒前から鳴る<br>
+          音量: <input required type="range" min="0" max="1" step="0.01"
+                       class="numbers" value=1>
       </td>
     </tr>
     <tr><td colspan="2"><button name="ct-start">スタート</button></td></tr>
@@ -47,14 +56,14 @@
   <table>
     <tr>
       <th>キャラ選択まで</th>
-      <td id="ct-charactor-selection-remaining">00:00.00</td>
+      <td id="ct-charactor-selection-remaining" class="numbers">00:00.00</td>
     </tr>
     <tr>
       <th>錬金依頼まで</th>
-      <td id="ct-alchemy-request-remaining">00:00.00</td>
+      <td id="ct-alchemy-request-remaining" class="numbers">00:00.00</td>
     </tr>
   </table>
-  <p><small>経過時間: <span id="ct-elapsed-time">00:00.00</span></small>
+  <p><small>経過時間: <span id="ct-elapsed-time" class="numbers">00:00.00</span></small>
 </div>
 
 <h3>履歴</h3>
@@ -63,7 +72,7 @@
 
 <script src="ctimer.js"></script>
 <script>
-  var ct = new CharmTimer('ct-input', 'ct-display', 'ct-log');
+  var ct = new CharmTimer('ct-input', 'ct-alert-settings', 'ct-display', 'ct-log');
   ct.init();
 </script>
 

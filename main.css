@@ -1,3 +1,6 @@
+.numbers {
+  font-family: monospace;
+}
 
 /* *******************************
    #ct-input
@@ -5,6 +8,7 @@
 #ct-input fieldset {
   border-width: 0px;
   padding: 0px;
+  margin: 0px;
 }
 #ct-input table {
   border-spacing: 0px;
@@ -25,12 +29,15 @@
 /* *******************************
    #ct-display
    ******************************* */
+#ct-display td.numbers {
+  font-size: 150%;
+}
 #ct-display table {
   font-size: 180%;
 }
 #ct-display small {
   font-size: smaller;
-  color: gray;
+  color: #999;
 }
 
 /* *******************************
@@ -40,6 +47,6 @@
   background: #ddd;
 }
 #ct-log td, #ct-log th {
-  border-bottom: 1px gray solid;
+  border-bottom: 1px #ccc solid;
   text-align: center;
 }

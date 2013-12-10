@@ -2,8 +2,13 @@ var CharmTimer;
 (function(window){
   'use strict';
 
+  var document = window.document,
+  location = window.location;
+
   /* デバグフラグ */
-  var DEBUG = true;
+  var DEBUG = (location.protocol === 'file:') ||
+    (location.host.match(/^localhost:?/)) ||
+    (location.hash.match(/debug/));
 
   /* タイマーを更新する間隔 [msec] */
   var TIMER_INTERVAL = 10;
@@ -14,14 +19,23 @@ var CharmTimer;
   /* ログの上限 */
   var LOG_LIMIT = 1000;
 
+  /* アラート音ファイルパス */
+  var ALERT_FILE = 'beep.mp3';
+
   /******************************************
    * ViewModel の親玉
    ******************************************/
-  CharmTimer = function(inputFormId, timeDisplayId, logDisplayId){
+  CharmTimer = function(inputFormId, alertSettingsFormId, timeDisplayId, logDisplayId){
+    // model
+    this._alert = new Alert();
+    this._timer = null;
+
+    // modelview
     this._inputForm = new CharmTimer.InputForm($('#'+inputFormId)[0]);
+    this._alertSettingsForm =
+      new CharmTimer.AlertSettingsForm($('#'+alertSettingsFormId)[0], this._alert);
     this._timeDisplay = new CharmTimer.TimeDisplay($('#'+timeDisplayId)[0]);
     this._logDisplay = new CharmTimer.LogDisplay($('#'+logDisplayId)[0]);
-    this._timer = null;
   };
   CharmTimer.prototype = {
     init: function() {
@@ -41,7 +55,7 @@ var CharmTimer;
         if (this._inputForm.validate()) {
           this._startTimer();
         } else {
-          i('invalid value');
+          e('invalid value');
         }
         return false;
       }).bind(this));
@@ -55,9 +69,10 @@ var CharmTimer;
       d('#_startTimer');
       this._timer = new Timer(
         this._inputForm.getCharactorSelectionCTime(),
-        this._inputForm.getAlchemyRequestCTime());
-      this._timer.onUpdate((function(){
-        this._timeDisplay.render(this._timer.getStatus());
+        this._inputForm.getAlchemyRequestCTime(),
+        this._alert);
+      this._timer.onUpdate((function(status){
+        this._timeDisplay.render(status);
       }).bind(this));
       this._timer.start();
 
@@ -108,7 +123,8 @@ var CharmTimer;
         padLeft(date.getMonth() + 1, '0', 2) + '-' +
         padLeft(date.getDate(), '0', 2) + 'T' +
         padLeft(date.getHours(), '0', 2) + ':' +
-        padLeft(date.getMinutes(), '0', 2);
+        padLeft(date.getMinutes(), '0', 2) + ':' +
+        padLeft(date.getSeconds(), '0', 2);
     },
     save: function() {
       this._storage.delaySet('_', {
@@ -153,7 +169,8 @@ var CharmTimer;
       this._startButton.addEventListener('click', cb);
     },
     getMachineDatetime: function() {
-      return new Date(this._machineDatetime.valueAsNumber + TIMEZONE_OFFSET);
+      var msec = (~~(this._machineDatetime.valueAsNumber / 1000)) * 1000;
+      return new Date(msec + TIMEZONE_OFFSET);
     },
     getCharactorSelectionCTime: function(){
       return this._charSelTimeForm.getCTime();
@@ -183,9 +200,63 @@ var CharmTimer;
     },
     onChange: function(cb) {
       this._fieldset.addEventListener('change', cb);
-      this._fieldset.addEventListener('keypress', cb);
+      this._fieldset.addEventListener('keyup', cb);
       this._fieldset.addEventListener('click', cb);
     }
+  };
+
+  /* アラート音設定 */
+  CharmTimer.AlertSettingsForm = function(alertSettingsFormElement, alert) {
+    var inputs = $$(alertSettingsFormElement, 'input');
+    this._secondsInputElement = inputs[0];
+    this._volumeInputElement = inputs[1];
+    this.alert = alert;
+    this.setVolume(1);
+    this.setSeconds(10);
+
+    this._storage = new Storage('alert-settings');
+    this.load();
+
+    var secondsChangeCallback = function(e) {
+      this.alert.prealertSeconds = this._secondsInputElement.valueAsNumber;
+      this.save();
+    };
+    this._secondsInputElement.addEventListener('change', secondsChangeCallback.bind(this));
+    this._secondsInputElement.addEventListener('keyup', secondsChangeCallback.bind(this));
+    this._secondsInputElement.addEventListener('click', secondsChangeCallback.bind(this));
+
+    var volumeChangeCallback = function(e) {
+      this.alert.volume = this._volumeInputElement.valueAsNumber;
+      this.alert.play();
+      this.save();
+    };
+    this._volumeInputElement.addEventListener('click', volumeChangeCallback.bind(this));
+    this._secondsInputElement.addEventListener('keyup', secondsChangeCallback.bind(this));
+  };
+  CharmTimer.AlertSettingsForm.prototype = {
+    load: function() {
+      var o = this._storage.get('_');
+      if(!o) return;
+
+      if(o.volume)
+        this.setVolume(o.volume);
+      if(o.seconds)
+        this.setSeconds(o.seconds);
+    },
+    save: function() {
+      this._storage.delaySet('_', {
+        seconds: this.alert.prealertSeconds,
+        volume: this.alert.volume,
+      });
+    },
+    setVolume: function(v) {
+      this._volumeInputElement.value = v;
+      this.alert.volume = v;
+    },
+    setSeconds: function(s) {
+      this._secondsInputElement.value = s;
+      this.alert.prealertSeconds = s;
+    },
   };
 
   /* 時間表示 */
@@ -223,7 +294,7 @@ var CharmTimer;
   /* 呼ばれる頻度高いので、最低限のリファクタリングに留めている */
   var formatForMillisec = function(msec){
     if (msec < 0)
-      return '000:00.00';
+      return '00:00.00';
 
     var c = Math.floor(msec / 10);
     var s = Math.floor(c / 100);
@@ -232,11 +303,8 @@ var CharmTimer;
     var cSeconds = c % 100;
 
     var minutesString = minutes.toString();
-    switch (minutesString.length) {
-    case 1: minutesString = '00' + minutesString; break;
-    case 2: minutesString = '0'  + minutesString; break;
-    case 3: break;
-    }
+    if (minutesString.length === 1)
+      minutesString = '0' + minutesString;
 
     var secondsString = seconds.toString();
     if (secondsString.length === 1)
@@ -355,7 +423,8 @@ var CharmTimer;
         padLeft(date.getMonth() + 1, '0', 2) + '/' +
         padLeft(date.getDate(), '0', 2) + ' ' +
         padLeft(date.getHours(), '0', 2) + ':' +
-        padLeft(date.getMinutes(), '0', 2);
+        padLeft(date.getMinutes(), '0', 2) + ':' +
+        padLeft(date.getSeconds(), '0', 2);
     },
     _buildMemoTd: function() {
       var td = document.createElement('td');
@@ -399,6 +468,7 @@ var CharmTimer;
   };
   CharmTimer.Log._appendTd = function(tr, tdTextContent){
     var td = document.createElement('td');
+    td.className = 'numbers';
     td.textContent = tdTextContent;
     tr.appendChild(td);
   };
@@ -408,19 +478,45 @@ var CharmTimer;
    ******************************************/
 
   /* タイマー */
-  var Timer = function(charSelCTime, alchReqCTime) {
+  var Timer = function(charSelCTime, alchReqCTime, alert) {
     this._charSelCTime = charSelCTime;
     this._alchReqCTime = alchReqCTime;
+    this._alert = alert;
     this._startDate = null;
     this._interval = null;
     this._updateCallback = null;
+    this._prevCharSelRemainingSec = null;
+    this._prevAlchReqRemainingSec = null;
   };
   Timer.prototype = {
     start: function() {
       if (this._startDate)
         throw 'already started';
+
       this._startDate = new Date();
-      this._interval = setInterval(this._updateCallback, TIMER_INTERVAL);
+      var status = this.getStatus();
+      this._prevCharSelRemainingSec =
+        Math.floor(status.getCharactorSelectionRemaining() / 1000);
+      this._prevAlchReqRemainingSec =
+        Math.floor(status.getAlchemyRequestRemaining() / 1000);
+
+      this._interval = setInterval((function() {
+        var status = this.getStatus();
+        this._updateCallback(status);
+
+        var prevSec = this._prevCharSelRemainingSec;
+        var currSec = Math.floor(status.getCharactorSelectionRemaining() / 1000);
+        this._prevCharSelRemainingSec = currSec;
+        if (currSec !== prevSec)
+          this._alert.alertIfConditionsAreMet(currSec);
+
+        prevSec = this._prevAlchReqRemainingSec;
+        currSec = Math.floor(status.getAlchemyRequestRemaining() / 1000);
+        this._prevAlchReqRemainingSec = currSec;
+        if (currSec !== prevSec)
+          this._alert.alertIfConditionsAreMet(currSec);
+
+      }).bind(this), TIMER_INTERVAL);
     },
     stop: function() {}, // いらないかも
     destroy: function() {
@@ -518,10 +614,51 @@ var CharmTimer;
       return ((((this._minutes) * 60) + this._seconds) * 1000) + this._milliseconds;
     },
     toString: function() {
-      return padLeft(this._minutes, '0', 3) + ':' +
+      return padLeft(this._minutes, '0', 2) + ':' +
         padLeft(this._seconds, '0', 2) + '.' +
         padLeft(this._milliseconds / 10, '0', 2);
     },
+  };
+
+  /* アラート再生 */
+  var Alert = function(){
+    this.prealertSeconds = 10;
+    this.volume = 1;
+
+    this._element = new Audio(ALERT_FILE);
+    this._element.addEventListener('ended', function(){
+      d('ended');
+
+      // google chrome の Audio のバグ？のワークアラウンド
+      // 一度再生する二度以降再生されない
+      this.currentTime = 0;
+      if (this.currentTime !== 0) {
+        this.load();
+      }
+    });
+  };
+  Alert.prototype = {
+    play: function() {
+      this._element.volume = this.volume;
+      if (this._element.readyState !== HTMLMediaElement.HAVE_ENOUGH_DATA) {
+        e('unexpected readyState: %o', this._element);
+        return;
+      }
+
+      this._element.play();
+      d('play');
+    },
+    alertIfConditionsAreMet: function(sec) {
+      if (this.isMeetingConditions(sec)) {
+        this.play();
+        return true;
+      }
+      return false;
+    },
+    isMeetingConditions: function(sec) {
+      // 0.01 → 0.00 時も条件に入れるために -1 以上にする必要がある
+      return (-1 <= sec) && (sec <= this.prealertSeconds);
+    }
   };
 
   /* 便利関数 */
@@ -536,6 +673,7 @@ var CharmTimer;
   };
   var d = DEBUG ? console.log.bind(console) : function(){};
   var i = console.log.bind(console);
+  var e = console.error.bind(console);
   var padLeft = function(num, ch, width) {
     var numString = num.toString();
     while(width > numString.length)
