@@ -11,7 +11,7 @@ var CharmTimer;
     (location.hash.match(/debug/));
 
   /* タイマーを更新する間隔 [msec] */
-  var TIMER_INTERVAL = 10;
+  var TIMER_INTERVAL = 4;
 
   /* タイムゾーンのオフセット [msec] */
   var TIMEZONE_OFFSET = (new Date()).getTimezoneOffset() * 60 * 1000;
