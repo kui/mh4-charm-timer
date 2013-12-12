@@ -626,6 +626,7 @@ var CharmTimer;
     this.volume = 1;
 
     this._element = new Audio(ALERT_FILE);
+    this._element.loop = false;
     this._element.addEventListener('ended', function(){
       d('ended');
 
